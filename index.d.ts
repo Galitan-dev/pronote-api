@@ -223,11 +223,12 @@ export class PronoteStudentSession extends PronoteSession
      *
      * @param from La date à partir de laquelle récupérer les devoirs. Par défaut la Date actuelle
      * @param to La date jusqu'à laquelle récupérer les devoirs. Par défaut 'from' + 1 jour
+     * @param showDone S'il faut afficher les devois déjà fait. Par défaut 'Non'
      *
      * @return La liste des devoirs situés entre les deux dates données. Si l'onglet des devoirs n'est pas
      * disponible, `null` sera renvoyé.
      */
-    homeworks(from?: Date, to?: Date): Promise<Array<Homework> | null>
+    homeworks(from?: Date, to?: Date, showDone?: boolean): Promise<Array<Homework> | null>
 
     /**
      * Récupère les menus de la cantine des repas situés dans l'intervalle de temps donnée.
@@ -2062,4 +2063,3 @@ export interface PronoteMenuLabel extends PronoteObject
 {
     color: string // couleur
 }
-

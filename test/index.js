@@ -16,7 +16,14 @@ const cas = process.env.CAS;
 async function main() {
     const session = await pronote.login(url, username, password, cas);
 
-    session.log(session.user.name);
+    console.log(session.user.name, session.user.studentClass.name);
+
+    /*
+     * Console.log(await session.timetable());
+     * console.log(await session.marks());
+     */
+
+    console.log(await session.homeworks(new Date(), pronote.dates.addDays(15)));
 }
 
 main().catch(err => {

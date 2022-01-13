@@ -1,16 +1,13 @@
-/* eslint-disable no-console */
 const jsdom = require('jsdom');
 const axioRequest = require('../axioRequest')
-
 const { getDOM, submitForm, extractStart } = require('./api');
 const educonnect = require('./generics/educonnect');
-const querystring = require('querystring');
-const http = require('../http');
 
 async function login(url, account, username, password) {
     const jar = new jsdom.CookieJar();
     let dom = await getDOM({
-        url: 'https://ds.ac-bordeaux.fr/discovery/WAYF?entityID=https%3A%2F%2Fent2d.ac-bordeaux.fr%2Fshibboleth',
+        // eslint-disable-next-line max-len
+        url: 'https://ds.ac-bordeaux.fr/discovery/WAYF?entityID=https%3A%2F%2Fent2d.ac-bordeaux.fr%2Fshibboleth&return=https%3A%2F%2Fent2d.ac-bordeaux.fr%2FShibboleth.sso%2FLogin%3FSAMLDS%3D1%26target%3Dhttps%253A%252F%252Fent2d.ac-bordeaux.fr%252Fshibcas%252Flogin%253Fservice%253Dhttps%253A%25252F%25252F0331623K.index-education.net%25252Fpronote%25252Feleve.html',
         jar
     });
 
@@ -28,50 +25,27 @@ async function login(url, account, username, password) {
 
     dom = await educonnect({ dom, jar, url, account, username, password });
 
-    let redirectURL = dom.window.document.getElementsByTagName('a')[0].href;
+    let redirectURL = dom.window.document.getElementsByTagName('a')[0].href
 
     let response = await axioRequest({
         url: redirectURL,
         jar
     });
-    redirectURL = getOrigin(redirectURL) + response.headers.location;
 
-    const parsed = querystring.parse(redirectURL.split('?')[1])
-    const conversation = parsed.conversation
-    const sessionid = parsed.sessionid
-
-    // eslint-disable-next-line max-len
-    redirectURL = `${getOrigin(redirectURL)}/idp/Authn/RemoteUser?conversation=${conversation}&redirectToLoaderRemoteUser=0&sessionid=${sessionid}`
+    redirectURL = response.headers.location;
 
     response = await axioRequest({
         url: redirectURL,
         jar
-    })
-    // eslint-disable-next-line max-len
-    const remoteUserParsed = response.data.match(/<conversation>(.+)<\/conversation><uidInSession>(.+)<\/uidInSession>/u)
+    });
 
-    const remoteUserConversation = remoteUserParsed[1]
-    const uidInSession = remoteUserParsed[2]
-
-    // eslint-disable-next-line max-len
-    redirectURL = `${getOrigin(redirectURL)}/idp/Authn/RemoteUser?conversation=${remoteUserConversation}&uidInSession=${uidInSession}&sessionid=${sessionid}`
-
-    response = await http({
-        url: redirectURL,
-        jar,
-        followRedirects: true
-    })
+    redirectURL = response.headers.location;
 
     return extractStart(await getDOM({
-        url: `${url}${account.value}.html`,
+        url: redirectURL,
         jar,
         asIs: true
     }))
-}
-
-function getOrigin(url) {
-    const noProtocol = url.substring(url.indexOf('/') + 2);
-    return url.substring(0, url.indexOf('/')) + '//' + noProtocol.substring(0, noProtocol.indexOf('/'));
 }
 
 module.exports = login;
