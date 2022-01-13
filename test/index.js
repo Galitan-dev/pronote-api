@@ -17,13 +17,11 @@ async function main() {
     const session = await pronote.login(url, username, password, cas);
 
     console.log(session.user.name, session.user.studentClass.name);
+    console.log(await session.timetable());
+    console.log(await session.marks());
 
-    /*
-     * Console.log(await session.timetable());
-     * console.log(await session.marks());
-     */
-
-    console.log(await session.homeworks(new Date(), pronote.dates.addDays(15)));
+    const now = new Date();
+    console.log(await session.homeworks(now, new Date(now.valueOf() + 15 * 24 * 3600 * 1000)));
 }
 
 main().catch(err => {
